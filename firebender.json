@@ -1,14 +1,13 @@
 {
   "mcpServers": {
-    "Context7": {
+    "playwright": {
       "command": "npx",
       "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ],
-      "env": {},
-      "working_directory": null,
-      "start_on_launch": true
+        "@playwright/mcp@latest"
+      ]
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
     },
     "memory": {
       "command": "npx",
@@ -30,28 +29,52 @@
         "open_nodes"
       ]
     },
+    "perplexity-search": {
+      "command": "uvx",
+      "args": [
+        "perplexity-mcp"
+      ],
+      "env": {
+        "PERPLEXITY_API_KEY": "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",
+        "PERPLEXITY_MODEL": "sonar-pro"
+      },
+      "start_on_launch": true
+    },
+
+    "firecrawl-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "fc-5738dfc495f34fa1b309b06af71cbe87"
+      },
+      "start_on_launch": true
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "env": {
+        "MAX_HISTORY_SIZE": "1000"
+      },
+      "start_on_launch": true,
+      "autoapprove": [
+        "sequential_thinking"
+      ]
+    },
     "katalis-project": {
       "command": "npx",
       "args": [
         "-y",
-        "mcp-file-server",
-        "--base-path",
+        "@modelcontextprotocol/server-filesystem",
         "/Users/bogningguy-robert/AndroidStudioProjects/Katalis"
       ],
-      "env": {
-        "PROJECT_NAME": "Katalis",
-        "PROJECT_TYPE": "Android",
-        "FRAMEWORK": "Jetpack Compose",
-        "ARCHITECTURE": "MVVM + Hilt",
-        "PHASE": "Phase 0 - Foundation"
-      },
-      "working_directory": "/Users/bogningguy-robert/AndroidStudioProjects/Katalis",
-      "start_on_launch": true,
-      "autoapprove": [
-        "read_file",
-        "list_directory",
-        "search_files"
-      ]
+      "env": {},
+      "start_on_launch": true
     },
     "katalis-tracking": {
       "command": "npx",
@@ -64,7 +87,7 @@
       "env": {
         "GRAPH_TYPE": "project_tracking",
         "PROJECT_PHASES": "7",
-        "CURRENT_PHASE": "0",
+        "CURRENT_PHASE": "2",
         "IMPLEMENTATION_GUIDE": "IMPLEMENTATION_GUIDE.md"
       },
       "working_directory": "/Users/bogningguy-robert/AndroidStudioProjects/Katalis",
@@ -82,7 +105,7 @@
     "katalis": {
       "name": "Project Katalis",
       "description": "AI-powered educational Android app with on-device RAG and Jetpack Compose",
-      "status": "Phase 0 - Foundation (75% complete)",
+      "status": "Phase 2 - UI Implementation (Material 3 theme complete)",
       "architecture": {
         "ui": "Jetpack Compose + Material3",
         "di": "Hilt",
@@ -95,33 +118,40 @@
         {
           "id": 0,
           "name": "Project Genesis & Foundation",
-          "status": "in_progress",
-          "progress": 75,
+          "status": "complete",
+          "progress": 100,
           "tasks": [
             "IDE Configuration ✅",
             "Project Initialization ✅",
             "Gradle Dependencies ✅",
             "API Key Management ✅",
-            "Package Structure ⏳",
-            "Hilt Application ⏳"
+            "Package Structure ✅",
+            "Hilt Application ✅"
           ]
         },
         {
           "id": 1,
           "name": "Data Layer Implementation",
-          "status": "pending",
-          "progress": 0,
-          "dependencies": [
-            "Phase 0 complete"
+          "status": "complete",
+          "progress": 100,
+          "tasks": [
+            "Room Entities ✅",
+            "DAOs ✅",
+            "Repositories ✅",
+            "Hilt Integration ✅",
+            "DataStore ✅"
           ]
         },
         {
           "id": 2,
           "name": "UI Implementation",
-          "status": "pending",
-          "progress": 0,
-          "dependencies": [
-            "Phase 0 complete"
+          "status": "in_progress",
+          "progress": 25,
+          "tasks": [
+            "Material 3 Theme ✅",
+            "Component Library ⏸️",
+            "Screen Layouts ⏸️",
+            "Navigation ⏸️"
           ]
         },
         {
@@ -172,22 +202,22 @@
           ]
         }
       ],
-      "currentBlockers": [
-        {
-          "issue": "Gradle sync failure",
-          "severity": "high",
-          "description": "Build system errors preventing compilation",
-          "resolution": "Package structure creation in progress"
-        }
-      ],
+      "currentBlockers": [],
       "keyFiles": [
         "IMPLEMENTATION_GUIDE.md",
         "PROGRESS_TRACKER.md",
         "docs/PHASE_0_FOUNDATION.md",
+        "docs/PHASE_1_DATA_LAYER.md",
+        "docs/PHASE_2_UI.md",
         "docs/DEVELOPMENT_LOG.md",
         "app/build.gradle.kts",
         "gradle/libs.versions.toml"
-      ]
+      ],
+      "recentProgress": {
+        "lastCommit": "1f8eec2",
+        "buildStatus": "BUILD SUCCESSFUL",
+        "nextSteps": "Awaiting Figma wireframes for component/screen implementation"
+      }
     }
   }
 }
