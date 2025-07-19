@@ -17,6 +17,8 @@ import androidx.navigation.NavType
 import com.katalis.app.presentation.screens.HomeScreen
 import com.katalis.app.presentation.screens.SyllabusScreen
 import com.katalis.app.presentation.screens.SubjectChapterScreen
+import com.katalis.app.presentation.screens.LessonScreen
+import com.katalis.app.presentation.screens.QuizScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -30,6 +32,15 @@ sealed class Screen(val route: String) {
     object SubjectChapter : Screen("subject_chapter/{subjectId}/{chapterId}") {
         fun createRoute(subjectId: String, chapterId: String) =
             "subject_chapter/$subjectId/$chapterId"
+    }
+    object Lesson : Screen("lesson/{subjectId}/{chapterId}/{topicId}") {
+        fun createRoute(subjectId: String, chapterId: String, topicId: String) =
+            "lesson/$subjectId/$chapterId/$topicId"
+    }
+
+    object Quiz : Screen("quiz/{subjectId}/{chapterId}/{topicId}/{lessonId}") {
+        fun createRoute(subjectId: String, chapterId: String, topicId: String, lessonId: String) =
+            "quiz/$subjectId/$chapterId/$topicId/$lessonId"
     }
 }
 
@@ -108,14 +119,78 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onNavigateToTopic = { topicId ->
-                    // Placeholder for lesson navigation
-                    // Will be implemented when lesson screen is ready
+                    navController.navigate(Screen.Lesson.createRoute(subjectId, chapterId, topicId))
                 },
                 onProfileClick = {
                     navController.navigate(Screen.Profile.route)
                 },
                 onSettingsClick = {
                     navController.navigate(Screen.Settings.route)
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Lesson.route,
+            arguments = listOf(
+                navArgument("subjectId") { type = NavType.StringType },
+                navArgument("chapterId") { type = NavType.StringType },
+                navArgument("topicId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val subjectId = backStackEntry.arguments?.getString("subjectId") ?: ""
+            val chapterId = backStackEntry.arguments?.getString("chapterId") ?: ""
+            val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+
+            LessonScreen(
+                subjectId = subjectId,
+                chapterId = chapterId,
+                topicId = topicId,
+                navController = navController,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onStartQuiz = { lessonId ->
+                    navController.navigate(
+                        Screen.Quiz.createRoute(
+                            subjectId,
+                            chapterId,
+                            topicId,
+                            lessonId
+                        )
+                    )
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Quiz.route,
+            arguments = listOf(
+                navArgument("subjectId") { type = NavType.StringType },
+                navArgument("chapterId") { type = NavType.StringType },
+                navArgument("topicId") { type = NavType.StringType },
+                navArgument("lessonId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val subjectId = backStackEntry.arguments?.getString("subjectId") ?: ""
+            val chapterId = backStackEntry.arguments?.getString("chapterId") ?: ""
+            val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
+            val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
+
+            QuizScreen(
+                subjectId = subjectId,
+                chapterId = chapterId,
+                topicId = topicId,
+                lessonId = lessonId,
+                navController = navController,
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }
