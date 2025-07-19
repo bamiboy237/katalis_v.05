@@ -1,0 +1,193 @@
+{
+  "mcpServers": {
+    "Context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {},
+      "working_directory": null,
+      "start_on_launch": true
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-knowledge-graph",
+        "--memory-path",
+        "/Users/bogningguy-robert/.firebender/memory.jsonl"
+      ],
+      "autoapprove": [
+        "create_entities",
+        "create_relations",
+        "add_observations",
+        "delete_entities",
+        "delete_observations",
+        "delete_relations",
+        "read_graph",
+        "search_nodes",
+        "open_nodes"
+      ]
+    },
+    "katalis-project": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-file-server",
+        "--base-path",
+        "/Users/bogningguy-robert/AndroidStudioProjects/Katalis"
+      ],
+      "env": {
+        "PROJECT_NAME": "Katalis",
+        "PROJECT_TYPE": "Android",
+        "FRAMEWORK": "Jetpack Compose",
+        "ARCHITECTURE": "MVVM + Hilt",
+        "PHASE": "Phase 0 - Foundation"
+      },
+      "working_directory": "/Users/bogningguy-robert/AndroidStudioProjects/Katalis",
+      "start_on_launch": true,
+      "autoapprove": [
+        "read_file",
+        "list_directory",
+        "search_files"
+      ]
+    },
+    "katalis-tracking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-knowledge-graph",
+        "--memory-path",
+        "/Users/bogningguy-robert/AndroidStudioProjects/Katalis/katalis-memory.jsonl"
+      ],
+      "env": {
+        "GRAPH_TYPE": "project_tracking",
+        "PROJECT_PHASES": "7",
+        "CURRENT_PHASE": "0",
+        "IMPLEMENTATION_GUIDE": "IMPLEMENTATION_GUIDE.md"
+      },
+      "working_directory": "/Users/bogningguy-robert/AndroidStudioProjects/Katalis",
+      "start_on_launch": true,
+      "autoapprove": [
+        "create_entities",
+        "create_relations",
+        "add_observations",
+        "read_graph",
+        "search_nodes"
+      ]
+    }
+  },
+  "projectContext": {
+    "katalis": {
+      "name": "Project Katalis",
+      "description": "AI-powered educational Android app with on-device RAG and Jetpack Compose",
+      "status": "Phase 0 - Foundation (75% complete)",
+      "architecture": {
+        "ui": "Jetpack Compose + Material3",
+        "di": "Hilt",
+        "database": "Room",
+        "ai": "Google AI Edge (LiteRT)",
+        "navigation": "Navigation Compose",
+        "state": "StateFlow + ViewModel"
+      },
+      "phases": [
+        {
+          "id": 0,
+          "name": "Project Genesis & Foundation",
+          "status": "in_progress",
+          "progress": 75,
+          "tasks": [
+            "IDE Configuration ✅",
+            "Project Initialization ✅",
+            "Gradle Dependencies ✅",
+            "API Key Management ✅",
+            "Package Structure ⏳",
+            "Hilt Application ⏳"
+          ]
+        },
+        {
+          "id": 1,
+          "name": "Data Layer Implementation",
+          "status": "pending",
+          "progress": 0,
+          "dependencies": [
+            "Phase 0 complete"
+          ]
+        },
+        {
+          "id": 2,
+          "name": "UI Implementation",
+          "status": "pending",
+          "progress": 0,
+          "dependencies": [
+            "Phase 0 complete"
+          ]
+        },
+        {
+          "id": 3,
+          "name": "ViewModel & State Management",
+          "status": "pending",
+          "progress": 0,
+          "dependencies": [
+            "Phase 1 complete",
+            "Phase 2 complete"
+          ]
+        },
+        {
+          "id": 4,
+          "name": "Intelligence Layer (AI/RAG)",
+          "status": "pending",
+          "progress": 0,
+          "dependencies": [
+            "Phase 1 complete",
+            "Phase 3 complete"
+          ]
+        },
+        {
+          "id": 5,
+          "name": "Onboarding & Infrastructure",
+          "status": "pending",
+          "progress": 0,
+          "dependencies": [
+            "Phase 4 complete"
+          ]
+        },
+        {
+          "id": 6,
+          "name": "Testing & Hardening",
+          "status": "pending",
+          "progress": 0,
+          "dependencies": [
+            "Phase 5 complete"
+          ]
+        },
+        {
+          "id": 7,
+          "name": "Polish & Launch",
+          "status": "pending",
+          "progress": 0,
+          "dependencies": [
+            "Phase 6 complete"
+          ]
+        }
+      ],
+      "currentBlockers": [
+        {
+          "issue": "Gradle sync failure",
+          "severity": "high",
+          "description": "Build system errors preventing compilation",
+          "resolution": "Package structure creation in progress"
+        }
+      ],
+      "keyFiles": [
+        "IMPLEMENTATION_GUIDE.md",
+        "PROGRESS_TRACKER.md",
+        "docs/PHASE_0_FOUNDATION.md",
+        "docs/DEVELOPMENT_LOG.md",
+        "app/build.gradle.kts",
+        "gradle/libs.versions.toml"
+      ]
+    }
+  }
+}
