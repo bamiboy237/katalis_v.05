@@ -3,7 +3,7 @@ package com.katalis.app.presentation.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,7 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.katalis.app.presentation.viewmodels.SubjectWithChapters
 import com.katalis.app.presentation.viewmodels.Chapter
-import com.katalis.app.ui.theme.KatalisTheme
+import com.katalis.app.presentation.theme.KatalisTheme
 
 @Composable
 fun SubjectCard(
@@ -61,7 +61,7 @@ fun SubjectCard(
                 imageVector = if (isExpanded)
                     Icons.Default.KeyboardArrowDown
                 else
-                    Icons.Default.KeyboardArrowRight,
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = if (isExpanded) "Collapse" else "Expand",
                 tint = if (isExpanded)
                     MaterialTheme.colorScheme.onPrimaryContainer

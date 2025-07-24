@@ -1,5 +1,6 @@
 package com.katalis.app.presentation.viewmodels
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,20 +9,69 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SubjectChapterUiState(
-    val isLoading: Boolean = false,
-    val chapterTitle: String = "",
-    val topics: List<Topic> = emptyList(),
-    val error: String? = null
+// Data models for Subject Chapter functionality
+@Immutable
+data class Topic(
+    val id: String,
+    val title: String,
+    val isCompleted: Boolean = false,
+    val description: String = ""
 )
+
+@Immutable
+data class Chapter(
+    val id: String,
+    val title: String,
+    val topics: List<Topic> = emptyList()
+)
+
+@Immutable
+data class SubjectWithChapters(
+    val id: String,
+    val title: String,
+    val chapters: List<Chapter> = emptyList()
+)
+
+// State/Event pattern implementation
+@Immutable
+data class SubjectChapterState(
+    val isLoading: Boolean = false,
+    val subject: SubjectWithChapters? = null,
+    val selectedChapter: Chapter? = null,
+    val error: String? = null,
+    val chapterTitle: String = "",
+    val topics: List<Topic> = emptyList()
+)
+
+sealed class SubjectChapterEvent {
+    data class LoadSubjectChapters(val subjectId: String, val chapterId: String) :
+        SubjectChapterEvent()
+
+    data class SelectChapter(val chapter: Chapter) : SubjectChapterEvent()
+    data class MarkTopicCompleted(val topicId: String) : SubjectChapterEvent()
+    object ClearError : SubjectChapterEvent()
+}
 
 @HiltViewModel
 class SubjectChapterViewModel @Inject constructor() : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SubjectChapterUiState())
-    val uiState: StateFlow<SubjectChapterUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(SubjectChapterState())
+    val uiState: StateFlow<SubjectChapterState> = _uiState.asStateFlow()
 
-    fun loadChapter(subjectId: String, chapterId: String) {
+    fun onEvent(event: SubjectChapterEvent) {
+        when (event) {
+            is SubjectChapterEvent.LoadSubjectChapters -> loadSubjectChapters(
+                event.subjectId,
+                event.chapterId
+            )
+
+            is SubjectChapterEvent.SelectChapter -> selectChapter(event.chapter)
+            is SubjectChapterEvent.MarkTopicCompleted -> markTopicCompleted(event.topicId)
+            SubjectChapterEvent.ClearError -> _uiState.value = _uiState.value.copy(error = null)
+        }
+    }
+
+    private fun loadSubjectChapters(subjectId: String, chapterId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
@@ -29,39 +79,35 @@ class SubjectChapterViewModel @Inject constructor() : ViewModel() {
                 // Simulate loading delay
                 delay(500)
 
+                val subject = MockData.getSubjectById(subjectId)
                 val chapter = MockData.getChapterById(subjectId, chapterId)
-                if (chapter != null) {
-                    _uiState.value = SubjectChapterUiState(
-                        isLoading = false,
-                        chapterTitle = chapter.title,
-                        topics = chapter.topics,
-                        error = null
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = "Chapter not found"
-                    )
-                }
+
+                _uiState.value = SubjectChapterState(
+                    isLoading = false,
+                    subject = subject,
+                    selectedChapter = chapter,
+                    chapterTitle = chapter?.title ?: "",
+                    topics = chapter?.topics ?: emptyList(),
+                    error = null
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Failed to load chapter: ${e.message}"
+                    error = "Failed to load subject chapters: ${e.message}"
                 )
             }
         }
     }
 
-    fun onTopicClick(topicId: String) {
-        // Placeholder for topic navigation
-        // Will be implemented when lesson screen is ready
-        val topic = _uiState.value.topics.find { it.id == topicId }
-        topic?.let {
-            // Navigate to lesson screen
-        }
+    private fun selectChapter(chapter: Chapter) {
+        _uiState.value = _uiState.value.copy(
+            selectedChapter = chapter,
+            chapterTitle = chapter.title,
+            topics = chapter.topics
+        )
     }
 
-    fun markTopicCompleted(topicId: String) {
+    private fun markTopicCompleted(topicId: String) {
         val currentTopics = _uiState.value.topics
         val updatedTopics = currentTopics.map { topic ->
             if (topic.id == topicId) {
@@ -72,5 +118,94 @@ class SubjectChapterViewModel @Inject constructor() : ViewModel() {
         }
 
         _uiState.value = _uiState.value.copy(topics = updatedTopics)
+    }
+}
+
+// Mock data for development - TODO: Replace with repository implementation
+object MockData {
+    val algebraTopics = listOf(
+        Topic("1", "Foundations", false, "Basic algebraic concepts"),
+        Topic(
+            "2",
+            "Solving Linear Equations & Inequalities",
+            false,
+            "Linear equations and inequalities"
+        ),
+        Topic("3", "Functions & Graphing", false, "Functions and their graphs"),
+        Topic("4", "Polynomials", true, "Polynomial functions and operations"),
+        Topic("5", "Exponentials", false, "Exponential functions and logarithms")
+    )
+
+    val trigonometryTopics = listOf(
+        Topic("6", "Unit Circle", false, "Understanding the unit circle"),
+        Topic("7", "Trigonometric Functions", false, "Sine, cosine, and tangent"),
+        Topic("8", "Identities", false, "Trigonometric identities")
+    )
+
+    val calculusTopics = listOf(
+        Topic("9", "Limits", false, "Introduction to limits"),
+        Topic("10", "Derivatives", false, "Differentiation"),
+        Topic("11", "Integration", false, "Integration techniques")
+    )
+
+    val mechanicsTopics = listOf(
+        Topic("12", "Newton's Laws", false, "Laws of motion"),
+        Topic("13", "Energy", false, "Kinetic and potential energy"),
+        Topic("14", "Momentum", false, "Conservation of momentum")
+    )
+
+    val pureMatematicsWithMechanics = SubjectWithChapters(
+        id = "pmm",
+        title = "Pure Mathematics with Mechanics",
+        chapters = listOf(
+            Chapter("algebra", "Algebra", algebraTopics),
+            Chapter("trigonometry", "Trigonometry", trigonometryTopics),
+            Chapter("calculus", "Calculus", calculusTopics),
+            Chapter("mechanics", "Mechanics", mechanicsTopics)
+        )
+    )
+
+    val biologyChapters = listOf(
+        Chapter("cell-biology", "Cell Biology", emptyList()),
+        Chapter("genetics", "Genetics", emptyList()),
+        Chapter("evolution", "Evolution", emptyList())
+    )
+
+    val chemistryChapters = listOf(
+        Chapter("atomic-structure", "Atomic Structure", emptyList()),
+        Chapter("bonding", "Chemical Bonding", emptyList()),
+        Chapter("reactions", "Chemical Reactions", emptyList())
+    )
+
+    val historyChapters = listOf(
+        Chapter("ancient", "Ancient History", emptyList()),
+        Chapter("modern", "Modern History", emptyList())
+    )
+
+    val computerScienceChapters = listOf(
+        Chapter("programming", "Programming Fundamentals", emptyList()),
+        Chapter("algorithms", "Algorithms", emptyList())
+    )
+
+    val physicsChapters = listOf(
+        Chapter("mechanics", "Classical Mechanics", emptyList()),
+        Chapter("thermodynamics", "Thermodynamics", emptyList())
+    )
+
+    val allSubjects = listOf(
+        pureMatematicsWithMechanics,
+        SubjectWithChapters("biology", "Biology", biologyChapters),
+        SubjectWithChapters("chemistry", "Chemistry", chemistryChapters),
+        SubjectWithChapters("history", "History", historyChapters),
+        SubjectWithChapters("computer-science", "Computer Science", computerScienceChapters),
+        SubjectWithChapters("physics", "Physics", physicsChapters)
+    )
+
+    fun getSubjectById(id: String): SubjectWithChapters? {
+        return allSubjects.find { it.id == id }
+    }
+
+    fun getChapterById(subjectId: String, chapterId: String): Chapter? {
+        return getSubjectById(subjectId)?.chapters?.find { it.id == chapterId }
     }
 }

@@ -19,6 +19,9 @@ import com.katalis.app.presentation.screens.SyllabusScreen
 import com.katalis.app.presentation.screens.SubjectChapterScreen
 import com.katalis.app.presentation.screens.LessonScreen
 import com.katalis.app.presentation.screens.QuizScreen
+import com.katalis.app.presentation.screens.chat.ChatWelcomeScreen
+import com.katalis.app.presentation.screens.chat.ChatConversationScreen
+import com.katalis.app.presentation.screens.DebugSettingsScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -27,21 +30,25 @@ sealed class Screen(val route: String) {
     object Chemistry : Screen("chemistry")
     object Syllabus : Screen("syllabus")
     object Chat : Screen("chat")
+    object ChatConversation : Screen("chat_conversation/{conversationId}") {
+        fun createRoute(conversationId: String) = "chat_conversation/$conversationId"
+    }
     object Profile : Screen("profile")
     object Settings : Screen("settings")
     object SubjectChapter : Screen("subject_chapter/{subjectId}/{chapterId}") {
         fun createRoute(subjectId: String, chapterId: String) =
             "subject_chapter/$subjectId/$chapterId"
     }
-    object Lesson : Screen("lesson/{subjectId}/{chapterId}/{topicId}") {
-        fun createRoute(subjectId: String, chapterId: String, topicId: String) =
-            "lesson/$subjectId/$chapterId/$topicId"
+    object Lesson : Screen("lesson/{subjectId}/{topicId}") {
+        fun createRoute(subjectId: String, topicId: String) =
+            "lesson/$subjectId/$topicId"
     }
 
-    object Quiz : Screen("quiz/{subjectId}/{chapterId}/{topicId}/{lessonId}") {
-        fun createRoute(subjectId: String, chapterId: String, topicId: String, lessonId: String) =
-            "quiz/$subjectId/$chapterId/$topicId/$lessonId"
+    object Quiz : Screen("quiz/{subjectId}/{topicId}") {
+        fun createRoute(subjectId: String, topicId: String) =
+            "quiz/$subjectId/$topicId"
     }
+    object DebugSettings : Screen("debug_settings")
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -69,6 +76,9 @@ fun NavGraph(
                 },
                 onSettingsClick = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onDebugClick = {
+                    navController.navigate(Screen.DebugSettings.route)
                 }
             )
         }
@@ -119,7 +129,7 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onNavigateToTopic = { topicId ->
-                    navController.navigate(Screen.Lesson.createRoute(subjectId, chapterId, topicId))
+                    navController.navigate(Screen.Lesson.createRoute(subjectId, topicId))
                 },
                 onProfileClick = {
                     navController.navigate(Screen.Profile.route)
@@ -134,29 +144,24 @@ fun NavGraph(
             route = Screen.Lesson.route,
             arguments = listOf(
                 navArgument("subjectId") { type = NavType.StringType },
-                navArgument("chapterId") { type = NavType.StringType },
                 navArgument("topicId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val subjectId = backStackEntry.arguments?.getString("subjectId") ?: ""
-            val chapterId = backStackEntry.arguments?.getString("chapterId") ?: ""
             val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
 
             LessonScreen(
                 subjectId = subjectId,
-                chapterId = chapterId,
                 topicId = topicId,
                 navController = navController,
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onStartQuiz = { lessonId ->
-                    navController.navigate(
+                onStartQuiz = {
+                navController.navigate(
                         Screen.Quiz.createRoute(
                             subjectId,
-                            chapterId,
-                            topicId,
-                            lessonId
+                            topicId
                         )
                     )
                 },
@@ -173,21 +178,15 @@ fun NavGraph(
             route = Screen.Quiz.route,
             arguments = listOf(
                 navArgument("subjectId") { type = NavType.StringType },
-                navArgument("chapterId") { type = NavType.StringType },
-                navArgument("topicId") { type = NavType.StringType },
-                navArgument("lessonId") { type = NavType.StringType }
+                navArgument("topicId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val subjectId = backStackEntry.arguments?.getString("subjectId") ?: ""
-            val chapterId = backStackEntry.arguments?.getString("chapterId") ?: ""
             val topicId = backStackEntry.arguments?.getString("topicId") ?: ""
-            val lessonId = backStackEntry.arguments?.getString("lessonId") ?: ""
 
             QuizScreen(
                 subjectId = subjectId,
-                chapterId = chapterId,
                 topicId = topicId,
-                lessonId = lessonId,
                 navController = navController,
                 onBackClick = {
                     navController.popBackStack()
@@ -196,15 +195,45 @@ fun NavGraph(
         }
 
         composable(Screen.Chat.route) {
-            PlaceholderScreen(title = "Chat")
+            ChatWelcomeScreen(
+                onSendMessage = { message ->
+                    // Generate a conversation ID and navigate to conversation
+                    val conversationId = "conv_${System.currentTimeMillis()}"
+                    navController.navigate(Screen.ChatConversation.createRoute(conversationId))
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
+                }
+            )
         }
-        
+
+        composable(
+            route = Screen.ChatConversation.route,
+            arguments = listOf(
+                navArgument("conversationId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            ChatConversationScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         composable(Screen.Profile.route) {
             PlaceholderScreen(title = "Profile")
         }
         
         composable(Screen.Settings.route) {
             PlaceholderScreen(title = "Settings")
+        }
+
+        composable(Screen.DebugSettings.route) {
+            DebugSettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

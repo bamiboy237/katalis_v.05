@@ -19,6 +19,16 @@ dependencyResolutionManagement {
     }
 }
 
+// Build cache configuration for improved build performance
+buildCache {
+    local {
+        // Set directory to "<project-root>/.gradle/build-cache"
+        // directory = File(rootDir, ".gradle/build-cache") // Or your preferred location
+        // enable by default
+        isEnabled = true
+    }
+}
+
 rootProject.name = "Katalis"
 include(":app")
  

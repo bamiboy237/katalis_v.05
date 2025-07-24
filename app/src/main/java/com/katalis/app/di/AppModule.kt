@@ -1,6 +1,9 @@
 package com.katalis.app.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.katalis.app.data.local.KatalisDatabase
 import com.katalis.app.data.local.dao.KnowledgeArticleDao
@@ -16,9 +19,17 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "katalis_preferences")
+
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return context.dataStore
+    }
 
     @Provides
     @Singleton
@@ -31,7 +42,7 @@ object AppModule {
             KatalisDatabase.DATABASE_NAME
         )
             .createFromAsset("database/${KatalisDatabase.ASSET_DATABASE_NAME}")
-            .fallbackToDestructiveMigration() // For development only
+            .fallbackToDestructiveMigration(true) // For development only
             .build()
     }
 

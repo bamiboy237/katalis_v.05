@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.katalis.app.presentation.components.BottomNavigationBar
 import com.katalis.app.presentation.navigation.NavGraph
-import com.katalis.app.ui.theme.KatalisTheme
+import com.katalis.app.presentation.theme.KatalisTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

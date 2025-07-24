@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,7 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.katalis.app.presentation.utils.SubjectIconMapper
 import com.katalis.app.presentation.viewmodels.HomeViewModel
 import com.katalis.app.presentation.viewmodels.SubjectInfo
-import com.katalis.app.ui.theme.KatalisTheme
+import com.katalis.app.presentation.theme.KatalisTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +30,7 @@ fun HomeScreen(
     onNavigateToSubject: (String) -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onDebugClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -54,11 +56,21 @@ fun HomeScreen(
                 )
             }
 
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings"
-                )
+            Row {
+                IconButton(onClick = onDebugClick) {
+                    Icon(
+                        imageVector = Icons.Default.BugReport,
+                        contentDescription = "Debug Settings",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                IconButton(onClick = onSettingsClick) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings"
+                    )
+                }
             }
         }
         
@@ -169,7 +181,10 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                items(uiState.subjects) { subject ->
+                items(
+                    items = uiState.subjects,
+                    key = { subject -> subject.name }
+                ) { subject ->
                     SubjectCard(
                         subject = subject,
                         onClick = { onNavigateToSubject(subject.name) }
@@ -225,7 +240,7 @@ private fun SubjectCard(
         ) {
             Icon(
                 imageVector = SubjectIconMapper.getIconForSubject(subject.name),
-                contentDescription = null,
+                contentDescription = SubjectIconMapper.getContentDescriptionForSubject(subject.name),
                 modifier = Modifier
                     .size(48.dp)
                     .padding(bottom = 12.dp),

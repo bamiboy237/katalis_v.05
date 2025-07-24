@@ -8,7 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,35 +18,123 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.katalis.app.presentation.components.PlaceholderImage
 import com.katalis.app.presentation.navigation.Screen
+import com.katalis.app.presentation.viewmodels.LessonViewModel
+import com.katalis.app.presentation.viewmodels.LessonEvent
+import com.katalis.app.presentation.viewmodels.LessonUiState
+import com.katalis.app.presentation.viewmodels.LessonPage
+import com.katalis.app.presentation.viewmodels.LessonSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LessonScreen(
     subjectId: String,
-    chapterId: String,
     topicId: String,
     navController: NavController,
+    viewModel: LessonViewModel = hiltViewModel(),
     onBackClick: () -> Unit = { navController.popBackStack() },
-    onStartQuiz: (String) -> Unit = {},
+    onStartQuiz: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Mock lesson data - will be replaced with database integration
-    val lessonTitle = "Solving Linear Equations" // TODO: Load from database
-    val lessonPages = getLessonPages() // Mock data
-    
-    val pagerState = rememberPagerState(pageCount = { lessonPages.size })
-    var readingProgress by remember { mutableFloatStateOf(0f) }
-    
-    // Calculate reading progress based on current page
-    LaunchedEffect(pagerState.currentPage) {
-        readingProgress = (pagerState.currentPage + 1).toFloat() / lessonPages.size
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Load lesson when screen first loads
+    LaunchedEffect(subjectId, topicId) {
+        viewModel.onEvent(LessonEvent.LoadLesson(subjectId, topicId))
     }
+
+    when (uiState) {
+        is LessonUiState.Loading -> {
+            LoadingContent(modifier = modifier.fillMaxSize())
+        }
+        is LessonUiState.Success -> {
+            LessonContent(
+                uiState = uiState as LessonUiState.Success,
+                viewModel = viewModel,
+                onBackClick = onBackClick,
+                onStartQuiz = onStartQuiz,
+                modifier = modifier
+            )
+        }
+        is LessonUiState.Error -> {
+            ErrorContent(
+                message = (uiState as LessonUiState.Error).message,
+                onRetry = { viewModel.onEvent(LessonEvent.Retry) },
+                onBackClick = onBackClick,
+                modifier = modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingContent(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorContent(
+    message: String,
+    onRetry: () -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Error loading lesson",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.error
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
+            OutlinedButton(onClick = onBackClick) {
+                Text("Go Back")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = onRetry) {
+                Text("Retry")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LessonContent(
+    uiState: LessonUiState.Success,
+    viewModel: LessonViewModel,
+    onBackClick: () -> Unit,
+    onStartQuiz: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val pagerState = rememberPagerState(pageCount = { uiState.lesson.pages.size })
     
-    val isLessonComplete = readingProgress >= 1.0f
+    // Sync pager state with ViewModel
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.onEvent(LessonEvent.NavigateToPage(pagerState.currentPage))
+    }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -55,7 +143,7 @@ fun LessonScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = lessonTitle,
+                    text = uiState.lesson.title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -63,7 +151,7 @@ fun LessonScreen(
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back"
                     )
                 }
@@ -75,7 +163,7 @@ fun LessonScreen(
 
         // Progress indicator
         LinearProgressIndicator(
-            progress = { readingProgress },
+            progress = { uiState.readingProgress },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
@@ -90,15 +178,15 @@ fun LessonScreen(
                 .fillMaxWidth()
         ) { pageIndex ->
             LessonPageContent(
-                page = lessonPages[pageIndex],
+                page = uiState.lesson.pages[pageIndex],
                 pageNumber = pageIndex + 1,
-                totalPages = lessonPages.size,
+                totalPages = uiState.lesson.pages.size,
                 modifier = Modifier.fillMaxSize()
             )
         }
 
         // Check Understanding button - only shows when lesson is complete
-        if (isLessonComplete) {
+        if (uiState.isCompleted) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -109,7 +197,8 @@ fun LessonScreen(
             ) {
                 Button(
                     onClick = {
-                        onStartQuiz("lesson_1") // TODO: Use actual lesson ID
+                        viewModel.onEvent(LessonEvent.MarkAsCompleted)
+                        onStartQuiz()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -119,7 +208,7 @@ fun LessonScreen(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack, // TODO: Use quiz/check icon
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack, // TODO: Use quiz/check icon
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -215,48 +304,4 @@ private fun LessonPageContent(
             modifier = Modifier.fillMaxWidth()
         )
     }
-}
-
-// Mock data structures - TODO: Replace with database models
-data class LessonPage(
-    val content: String,
-    val hasInitialLetter: Boolean = false,
-    val sections: List<LessonSection> = emptyList()
-)
-
-data class LessonSection(
-    val title: String,
-    val content: String,
-    val hasVisualContent: Boolean = false
-)
-
-// Mock lesson data - TODO: Replace with database queries
-private fun getLessonPages(): List<LessonPage> {
-    return listOf(
-        LessonPage(
-            content = "inear equations form the foundation of algebraic thinking and problem-solving. Understanding how to manipulate and solve these equations systematically will provide you with powerful tools for tackling more complex mathematical concepts.",
-            hasInitialLetter = true,
-            sections = listOf(
-                LessonSection(
-                    title = "Understanding the Structure",
-                    content = "A linear equation in one variable can be written in the form ax + b = c, where a, b, and c are constants and a ≠ 0. The goal is to isolate the variable x by performing inverse operations on both sides of the equation.",
-                    hasVisualContent = true
-                ),
-                LessonSection(
-                    title = "Step-by-Step Solution Process",
-                    content = "The key principle in solving linear equations is maintaining balance. Whatever operation you perform on one side of the equation, you must perform the same operation on the other side.\n\nConsider the equation 3x + 7 = 22. To solve for x, we need to isolate it by undoing the operations in reverse order. First, subtract 7 from both sides, then divide both sides by 3."
-                )
-            )
-        ),
-        LessonPage(
-            content = "Building on the fundamentals, let's explore more complex scenarios and applications.",
-            sections = listOf(
-                LessonSection(
-                    title = "Practice and Application",
-                    content = "Mastery comes through practice with various types of linear equations. Start with simple one-step equations and gradually work toward more complex multi-step problems involving fractions and decimals.",
-                    hasVisualContent = false
-                )
-            )
-        )
-    )
 }

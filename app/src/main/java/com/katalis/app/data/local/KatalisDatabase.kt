@@ -41,7 +41,7 @@ abstract class KatalisDatabase : RoomDatabase() {
                     DATABASE_NAME
                 )
                     .createFromAsset("database/$ASSET_DATABASE_NAME")
-                    .fallbackToDestructiveMigration() // For development only
+                    .fallbackToDestructiveMigration(true) // For development only
                     .build()
                 INSTANCE = instance
                 instance

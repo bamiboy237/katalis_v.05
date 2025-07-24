@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ColumnInfo
 import androidx.room.ForeignKey
+import androidx.room.Index
 
 @Entity(
     tableName = "search_index",
@@ -14,7 +15,8 @@ import androidx.room.ForeignKey
             childColumns = ["article_id"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["article_id"])]
 )
 data class SearchIndex(
     @PrimaryKey(autoGenerate = true)

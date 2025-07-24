@@ -27,7 +27,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.katalis.app.presentation.viewmodels.Chapter
 import com.katalis.app.presentation.viewmodels.MockData
 import com.katalis.app.presentation.viewmodels.SubjectWithChapters
-import com.katalis.app.ui.theme.KatalisTheme
+import com.katalis.app.presentation.theme.KatalisTheme
 
 @Composable
 fun ChapterDropdownOverlay(

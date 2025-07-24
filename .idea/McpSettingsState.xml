@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="McpSettingsState">
+    <option name="disabledTools">
+      <map>
+        <entry key="perplexity_search_web" value="false" />
+      </map>
+    </option>
+  </component>
+</project>

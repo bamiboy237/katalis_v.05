@@ -1,21 +1,45 @@
 {
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
+  "rules": [
+    "Write clear, concise code comments",
+    "Evidence-based development with documentation",
+    "Systematic approach to problem-solving",
+    "Domain-specific expertise when requested",
+    "Token-efficient responses",
+    "Always include error handling",
+    "Consider edge cases",
+    "Provide clear variable names",
+    "Include relevant comments",
+    "Follow established patterns",
+    "Focus on system design and architectural patterns when in architect mode",
+    "Prioritize security best practices when in security mode",
+    "Focus on user experience and interface design when in frontend mode",
+    "Focus on server-side architecture when in backend mode",
+    "Focus on performance optimization when in performance mode",
+    "Focus on testing strategies and quality assurance when in QA mode",
+    "Systematic problem analysis when in analyzer mode",
+    "Focus on code quality and maintainability when in refactorer mode",
+    "Educational and explanatory responses when in mentor mode",
+    "Follow these steps for each interaction: 1. User Identification: You should assume that you are interacting with default_user. If you have not identified default_user, proactively try to do so. 2. Memory Retrieval: Always begin your chat by saying only 'Remembering...' and retrieve all relevant information from your knowledge graph. Always refer to your knowledge graph as your 'memory'. 3. Memory Gathering: While conversing with the user, be attentive to any new information that falls into these categories: a) Basic Identity (age, gender, location, job title, education level, etc.) b) Behaviors (interests, habits, etc.) c) Preferences (communication style, preferred language, etc.) d) Goals (goals, targets, aspirations, etc.) e) Relationships (personal and professional relationships up to 3 degrees of separation). 4. Memory Update: If any new information was gathered during the interaction, update your memory as follows: a) Create entities for recurring organizations, people, and significant events b) Connect them to the current entities using relations c) Store facts about them as observations",
+    {
+      "filePathMatches": "**/*.kt",
+      "rules": [
+        "Follow Kotlin coding conventions",
+        "Use nullable types sparingly"
       ]
-    },
-    "context7": {
-      "url": "https://mcp.context7.com/mcp"
-    },
+    }
+  ],
+  "ignore": [
+    "build/**",
+    ".gradle/**"
+  ],
+  "mcpServers": {
     "memory": {
       "command": "npx",
       "args": [
         "-y",
         "mcp-knowledge-graph",
         "--memory-path",
-        "/Users/bogningguy-robert/.firebender/memory.jsonl"
+        "/Users/bogningguy-robert/AndroidStudioProjects/Katalis/docs/memory/memory.jsonl"
       ],
       "autoapprove": [
         "create_entities",
@@ -28,17 +52,34 @@
         "search_nodes",
         "open_nodes"
       ]
-    },
-    "perplexity-search": {
-      "command": "uvx",
+    }
+    ,
+    "sequential-thinking": {
+      "command": "npx",
       "args": [
-        "perplexity-mcp"
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "perplexity-ask": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "server-perplexity-ask"
       ],
       "env": {
-        "PERPLEXITY_API_KEY": "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",
-        "PERPLEXITY_MODEL": "sonar-pro"
-      },
-      "start_on_launch": true
+        "PERPLEXITY_API_KEY": "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"
+      }
     },
 
     "firecrawl-mcp": {
@@ -49,174 +90,6 @@
       ],
       "env": {
         "FIRECRAWL_API_KEY": "fc-5738dfc495f34fa1b309b06af71cbe87"
-      },
-      "start_on_launch": true
-    },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "env": {
-        "MAX_HISTORY_SIZE": "1000"
-      },
-      "start_on_launch": true,
-      "autoapprove": [
-        "sequential_thinking"
-      ]
-    },
-    "katalis-project": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/Users/bogningguy-robert/AndroidStudioProjects/Katalis"
-      ],
-      "env": {},
-      "start_on_launch": true
-    },
-    "katalis-tracking": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-knowledge-graph",
-        "--memory-path",
-        "/Users/bogningguy-robert/AndroidStudioProjects/Katalis/katalis-memory.jsonl"
-      ],
-      "env": {
-        "GRAPH_TYPE": "project_tracking",
-        "PROJECT_PHASES": "7",
-        "CURRENT_PHASE": "2",
-        "IMPLEMENTATION_GUIDE": "IMPLEMENTATION_GUIDE.md"
-      },
-      "working_directory": "/Users/bogningguy-robert/AndroidStudioProjects/Katalis",
-      "start_on_launch": true,
-      "autoapprove": [
-        "create_entities",
-        "create_relations",
-        "add_observations",
-        "read_graph",
-        "search_nodes"
-      ]
-    }
-  },
-  "projectContext": {
-    "katalis": {
-      "name": "Project Katalis",
-      "description": "AI-powered educational Android app with on-device RAG and Jetpack Compose",
-      "status": "Phase 2 - UI Implementation (Material 3 theme complete)",
-      "architecture": {
-        "ui": "Jetpack Compose + Material3",
-        "di": "Hilt",
-        "database": "Room",
-        "ai": "Google AI Edge (LiteRT)",
-        "navigation": "Navigation Compose",
-        "state": "StateFlow + ViewModel"
-      },
-      "phases": [
-        {
-          "id": 0,
-          "name": "Project Genesis & Foundation",
-          "status": "complete",
-          "progress": 100,
-          "tasks": [
-            "IDE Configuration ✅",
-            "Project Initialization ✅",
-            "Gradle Dependencies ✅",
-            "API Key Management ✅",
-            "Package Structure ✅",
-            "Hilt Application ✅"
-          ]
-        },
-        {
-          "id": 1,
-          "name": "Data Layer Implementation",
-          "status": "complete",
-          "progress": 100,
-          "tasks": [
-            "Room Entities ✅",
-            "DAOs ✅",
-            "Repositories ✅",
-            "Hilt Integration ✅",
-            "DataStore ✅"
-          ]
-        },
-        {
-          "id": 2,
-          "name": "UI Implementation",
-          "status": "in_progress",
-          "progress": 25,
-          "tasks": [
-            "Material 3 Theme ✅",
-            "Component Library ⏸️",
-            "Screen Layouts ⏸️",
-            "Navigation ⏸️"
-          ]
-        },
-        {
-          "id": 3,
-          "name": "ViewModel & State Management",
-          "status": "pending",
-          "progress": 0,
-          "dependencies": [
-            "Phase 1 complete",
-            "Phase 2 complete"
-          ]
-        },
-        {
-          "id": 4,
-          "name": "Intelligence Layer (AI/RAG)",
-          "status": "pending",
-          "progress": 0,
-          "dependencies": [
-            "Phase 1 complete",
-            "Phase 3 complete"
-          ]
-        },
-        {
-          "id": 5,
-          "name": "Onboarding & Infrastructure",
-          "status": "pending",
-          "progress": 0,
-          "dependencies": [
-            "Phase 4 complete"
-          ]
-        },
-        {
-          "id": 6,
-          "name": "Testing & Hardening",
-          "status": "pending",
-          "progress": 0,
-          "dependencies": [
-            "Phase 5 complete"
-          ]
-        },
-        {
-          "id": 7,
-          "name": "Polish & Launch",
-          "status": "pending",
-          "progress": 0,
-          "dependencies": [
-            "Phase 6 complete"
-          ]
-        }
-      ],
-      "currentBlockers": [],
-      "keyFiles": [
-        "IMPLEMENTATION_GUIDE.md",
-        "PROGRESS_TRACKER.md",
-        "docs/PHASE_0_FOUNDATION.md",
-        "docs/PHASE_1_DATA_LAYER.md",
-        "docs/PHASE_2_UI.md",
-        "docs/DEVELOPMENT_LOG.md",
-        "app/build.gradle.kts",
-        "gradle/libs.versions.toml"
-      ],
-      "recentProgress": {
-        "lastCommit": "1f8eec2",
-        "buildStatus": "BUILD SUCCESSFUL",
-        "nextSteps": "Awaiting Figma wireframes for component/screen implementation"
       }
     }
   }
