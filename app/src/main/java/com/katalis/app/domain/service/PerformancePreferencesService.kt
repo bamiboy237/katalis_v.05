@@ -28,7 +28,7 @@ class PerformancePreferencesService @Inject constructor(
         val allowGPUWhenHot: Boolean = false,
         val showPerformanceStats: Boolean = false,
         val adaptiveMode: Boolean = true, // Learn from usage patterns
-        val maxInferenceTime: Int = 10000 // milliseconds, fallback to CPU if exceeded
+        val maxInferenceTime: Int = 120000 // milliseconds, fallback to CPU if exceeded
     )
 
     companion object {
@@ -49,7 +49,7 @@ class PerformancePreferencesService @Inject constructor(
             allowGPUWhenHot = preferences[ALLOW_GPU_HOT_KEY] ?: false,
             showPerformanceStats = preferences[SHOW_PERFORMANCE_STATS_KEY] ?: false,
             adaptiveMode = preferences[ADAPTIVE_MODE_KEY] ?: true,
-            maxInferenceTime = preferences[MAX_INFERENCE_TIME_KEY]?.toIntOrNull() ?: 10000
+            maxInferenceTime = preferences[MAX_INFERENCE_TIME_KEY]?.toIntOrNull() ?: 60000
         )
     }
 

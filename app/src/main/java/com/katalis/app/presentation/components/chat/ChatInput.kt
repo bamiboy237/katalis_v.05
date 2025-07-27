@@ -1,87 +1,119 @@
 package com.katalis.app.presentation.components.chat
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.katalis.app.presentation.theme.KatalisTheme
 
 @Composable
-fun ChatInput(
-    modifier: Modifier = Modifier,
-    value: String,
-    onValueChange: (String) -> Unit,
+fun CleanChatInput(
     onSendMessage: (String) -> Unit,
-    placeholder: String = "Message Katalis...",
-    isEnabled: Boolean = true,
-
+    modifier: Modifier = Modifier,
+    placeholder: String = "let's study...",
+    isEnabled: Boolean = true
 ) {
+    var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val sendMessage = {
+        val trimmedText = textFieldValue.text.trim()
+        if (trimmedText.isNotBlank()) {
+            onSendMessage(trimmedText)
+            textFieldValue = TextFieldValue("")
+        }
+    }
+
+    // Clean, minimal input container
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(16.dp)
+            .background(
+                MaterialTheme.colorScheme.surfaceContainer,
+                RoundedCornerShape(28.dp)
+            )
+            .padding(4.dp),
+        verticalAlignment = Alignment.Bottom
     ) {
-        // Clean text input field
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
+        // Text input field
+        BasicTextField(
+            value = textFieldValue,
+            onValueChange = { textFieldValue = it },
             enabled = isEnabled,
-            modifier = Modifier.weight(1f),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.outline,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(
+                color = if (isEnabled) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             ),
-            shape = RoundedCornerShape(24.dp),
-            textStyle = MaterialTheme.typography.bodyLarge,
-            minLines = 1,
-            maxLines = 4
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Send
+            ),
+            keyboardActions = KeyboardActions(
+                onSend = {
+                    sendMessage()
+                    keyboardController?.hide()
+                }
+            ),
+            maxLines = 6,
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (textFieldValue.text.isEmpty()) {
+                        Text(
+                            text = placeholder,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                    innerTextField()
+                }
+            }
         )
 
-        // Send button - only shows when there's text
-        if (value.trim().isNotEmpty()) {
-            FilledIconButton(
-                onClick = {
-                    if (value.trim().isNotEmpty()) {
-                        onSendMessage(value.trim())
-                    }
+        // Send button
+        FilledIconButton(
+            onClick = sendMessage,
+            enabled = isEnabled && textFieldValue.text.trim().isNotBlank(),
+            modifier = Modifier.size(40.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = if (isEnabled && textFieldValue.text.trim().isNotBlank()) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
                 },
-                enabled = isEnabled && value.trim().isNotEmpty(),
-                modifier = Modifier.size(48.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send message",
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+                contentColor = if (isEnabled && textFieldValue.text.trim().isNotBlank()) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = "Send message",
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -101,7 +133,7 @@ fun SubjectSuggestionChips(
             SuggestionChip(
                 onClick = { onSuggestionClick(suggestion) },
                 label = {
-                Text(
+                    Text(
                         text = suggestion,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -115,28 +147,24 @@ fun SubjectSuggestionChips(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun ChatInputPreview() {
+fun CleanChatInputPreview() {
     KatalisTheme {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            var text1 by remember { mutableStateOf("") }
-            ChatInput(
-                value = text1,
-                onValueChange = { text1 = it },
+            CleanChatInput(
                 onSendMessage = { },
-                placeholder = "Ask about biology..."
+                placeholder = "Ask me anything about your studies..."
             )
 
-            var text2 by remember { mutableStateOf("What is photosynthesis?") }
-            ChatInput(
-                value = text2,
-                onValueChange = { text2 = it },
+            CleanChatInput(
                 onSendMessage = { },
-                placeholder = "Ask about biology..."
+                placeholder = "AI is thinking...",
+                isEnabled = false
             )
         }
     }

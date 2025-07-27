@@ -12,12 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.katalis.app.presentation.components.chat.ChatInput
+import com.katalis.app.presentation.components.chat.CleanChatInput
 import com.katalis.app.presentation.components.chat.SubjectSuggestionChips
 import com.katalis.app.presentation.theme.KatalisTheme
 
@@ -29,8 +28,6 @@ fun ChatWelcomeScreen(
     onMenuClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var messageText by remember { mutableStateOf("") }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,19 +72,13 @@ fun ChatWelcomeScreen(
                 SubjectSuggestionChips(
                     suggestions = listOf("Biology", "Chemistry", "Physics", "Mathematics"),
                     onSuggestionClick = { subject ->
-                        messageText = "Tell me about $subject"
+                        onSendMessage("Tell me about $subject")
                     },
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                // Chat input
-                ChatInput(
-                    value = messageText,
-                    onValueChange = { messageText = it },
-                    onSendMessage = { message ->
-                        onSendMessage(message)
-                        messageText = ""
-                    },
+                CleanChatInput(
+                    onSendMessage = onSendMessage,
                     placeholder = "Ask about biology, chemistry, physics..."
                 )
             }

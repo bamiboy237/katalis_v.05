@@ -163,10 +163,10 @@ class ChatViewModel @Inject constructor(
                                 "AI engine not ready. Please wait for initialization to complete."
 
                             result.message.contains("timeout") ->
-                                "Response took too long. Please try a simpler question or restart the app."
+                                "This question required more processing time than available . Try asking a simpler or more specific question, or restart the app if this continues."
 
                             result.message.contains("Generation failed") ->
-                                "AI processing failed. This might be due to model issues or device limitations."
+                                "AI processing failed. This might be due to model complexity or device limitations. Try a shorter question or restart the app."
 
                             else ->
                                 "Unable to generate response: ${result.message}"

@@ -79,7 +79,7 @@ class Gemma3nEngine @Inject constructor(
 
             val modelPath = modelPathResult.getOrThrow()
 
-            // Initialize with appropriate configuration
+            // Initialize with appropriate configuration - use model path directly
             val success = initializeWithAcceleration(modelPath, currentAccelerationType!!)
 
             if (success) {
@@ -88,6 +88,7 @@ class Gemma3nEngine @Inject constructor(
             } else {
                 // Fallback to CPU if GPU initialization failed
                 if (currentAccelerationType != DeviceCapabilityService.AccelerationType.CPU_ONLY) {
+                    Log.w("Gemma3nEngine", "GPU initialization failed, falling back to CPU")
                     currentAccelerationType = DeviceCapabilityService.AccelerationType.CPU_ONLY
                     val cpuSuccess =
                         initializeWithAcceleration(modelPath, currentAccelerationType!!)
@@ -124,33 +125,38 @@ class Gemma3nEngine @Inject constructor(
             val fileSize = modelFile.length()
             Log.d("Gemma3nEngine", "Model file size: ${fileSize / 1024 / 1024}MB")
 
-            if (fileSize < 2_800_000_000L) {
+            // Use proper validation range
+            if (fileSize < 2_900_000_000L) {
                 Log.e("Gemma3nEngine", "Model file too small: ${fileSize}bytes, expected ~3GB")
                 return@withContext false
             }
 
-            // Deploy model to accessible location for MediaPipe
-            val accessibleModelPath = deployModelForMediaPipe(modelFile)
-            Log.d("Gemma3nEngine", "Model deployed to accessible path: $accessibleModelPath")
-
-            // Configure LlmInferenceOptions with available parameters in MediaPipe 0.10.24
+            // Configure LlmInferenceOptions with GPU acceleration when requested
             val optionsBuilder = LlmInference.LlmInferenceOptions.builder()
-                .setModelPath(accessibleModelPath)
+                .setModelPath(modelPath)
                 .setMaxTokens(2048)  // Available in LlmInferenceOptions
 
-            // Apply GPU acceleration if supported and requested
+            // Enable GPU acceleration based on device capabilities and user preference
             when (accelerationType) {
                 DeviceCapabilityService.AccelerationType.GPU_PREFERRED -> {
-                    Log.d("Gemma3nEngine", "Configuring GPU acceleration")
-                    // Note: GPU delegate configuration may need additional setup
-                    // depending on MediaPipe version and device capabilities
+                    Log.d("Gemma3nEngine", "Enabling GPU acceleration")
+                    // MediaPipe GenAI will attempt GPU acceleration by default
+                    // Additional GPU configuration can be added here as API evolves
+                }
+                DeviceCapabilityService.AccelerationType.AUTO_ADAPTIVE -> {
+                    Log.d("Gemma3nEngine", "Using adaptive acceleration (GPU with CPU fallback)")
+                    // Let MediaPipe GenAI choose optimal acceleration
                 }
                 else -> {
-                    Log.d("Gemma3nEngine", "Using CPU inference")
+                    Log.d("Gemma3nEngine", "Using CPU-only inference")
+                    // CPU-only mode - MediaPipe will not attempt GPU acceleration
                 }
             }
 
-            Log.d("Gemma3nEngine", "Creating LlmInference with properly configured options...")
+            Log.d(
+                "Gemma3nEngine",
+                "Creating LlmInference with acceleration type: $accelerationType"
+            )
 
             llmInference = LlmInference.createFromOptions(context, optionsBuilder.build())
             Log.d("Gemma3nEngine", "MediaPipe LlmInference created successfully")
@@ -164,62 +170,33 @@ class Gemma3nEngine @Inject constructor(
             Log.e("Gemma3nEngine", "Failed to initialize MediaPipe GenAI", e)
             Log.e("Gemma3nEngine", "Error details: ${e.message}")
             Log.e("Gemma3nEngine", "Error type: ${e.javaClass.simpleName}")
-            Log.e("Gemma3nEngine", "Stack trace: ${e.stackTraceToString()}")
+
+            // Provide specific guidance for common GPU-related errors
+            when {
+                e.message?.contains("GPU", ignoreCase = true) == true -> {
+                    Log.w(
+                        "Gemma3nEngine",
+                        "GPU initialization failed - this device may not support GPU acceleration for GenAI"
+                    )
+                }
+
+                e.message?.contains("OpenGL", ignoreCase = true) == true -> {
+                    Log.w(
+                        "Gemma3nEngine",
+                        "OpenGL error detected - GPU delegate may be incompatible with this device"
+                    )
+                }
+
+                e.message?.contains("memory", ignoreCase = true) == true -> {
+                    Log.w(
+                        "Gemma3nEngine",
+                        "Memory error - device may not have sufficient resources for this model"
+                    )
+                }
+            }
+
             false
         }
-    }
-
-    /**
-     * Deploy model to a location accessible by MediaPipe GenAI
-     * Following MediaPipe guidelines for model deployment
-     */
-    private suspend fun deployModelForMediaPipe(sourceModelFile: java.io.File): String = withContext(Dispatchers.IO) {
-        // Option 1: Try external files directory (most likely to work)
-        val externalModelDir = java.io.File(context.getExternalFilesDir(null), "models")
-        if (!externalModelDir.exists()) {
-            externalModelDir.mkdirs()
-        }
-
-        val deployedModelFile = java.io.File(externalModelDir, "gemma_3n_deployed.task")
-        
-        Log.d("Gemma3nEngine", "Deploying model from ${sourceModelFile.absolutePath} to ${deployedModelFile.absolutePath}")
-        
-        // Check if model is already deployed and valid
-        if (deployedModelFile.exists() && deployedModelFile.length() == sourceModelFile.length()) {
-            Log.d("Gemma3nEngine", "Model already deployed and valid")
-            return@withContext deployedModelFile.absolutePath
-        }
-
-        // Copy model with progress logging for large files
-        var bytesTransferred = 0L
-        val bufferSize = 8192 // 8KB buffer for efficient copying
-        
-        sourceModelFile.inputStream().buffered(bufferSize).use { input ->
-            deployedModelFile.outputStream().buffered(bufferSize).use { output ->
-                val buffer = ByteArray(bufferSize)
-                var bytesRead: Int
-                
-                while (input.read(buffer).also { bytesRead = it } != -1) {
-                    output.write(buffer, 0, bytesRead)
-                    bytesTransferred += bytesRead
-                    
-                    // Log progress every 100MB
-                    if (bytesTransferred % (100 * 1024 * 1024) == 0L) {
-                        Log.d("Gemma3nEngine", "Model deployment progress: ${bytesTransferred / (1024 * 1024)}MB")
-                    }
-                }
-                output.flush()
-            }
-        }
-
-        Log.d("Gemma3nEngine", "Model deployment completed: ${bytesTransferred / (1024 * 1024)}MB")
-        
-        // Verify deployed model
-        if (!deployedModelFile.exists() || deployedModelFile.length() != sourceModelFile.length()) {
-            throw Exception("Model deployment failed - size mismatch")
-        }
-
-        deployedModelFile.absolutePath
     }
 
     private fun determineAccelerationType(

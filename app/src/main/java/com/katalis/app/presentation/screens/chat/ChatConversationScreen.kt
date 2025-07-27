@@ -12,14 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.katalis.app.presentation.viewmodels.ChatViewModel
-import com.katalis.app.presentation.components.chat.EnhancedChatInput
-import com.katalis.app.presentation.components.chat.EnhancedMessageBubble
+import com.katalis.app.presentation.components.chat.CleanChatInput
+import com.katalis.app.presentation.components.chat.CleanMessageBubble
 import com.katalis.app.presentation.components.chat.TypingIndicator
-import com.katalis.app.presentation.components.chat.ModelStatusIndicator
 import com.katalis.app.presentation.theme.KatalisTheme
 import kotlinx.coroutines.launch
 
@@ -69,18 +67,18 @@ fun ChatConversationScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // Enhanced header with AI status
+        // Minimal header
         TopAppBar(
             title = {
                 Column {
                     Text(
-                        text = "AI Tutor - Katalis",
+                        text = "Katalis",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Medium
                     )
                     if (!state.isModelReady) {
                         Text(
-                            text = state.initializationProgress,
+                            text = "Getting ready...",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -95,19 +93,12 @@ fun ChatConversationScreen(
                     )
                 }
             },
-            actions = {
-                ModelStatusIndicator(
-                    isReady = state.isModelReady,
-                    isLoading = state.isLoading
-                )
-            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surface
-            ),
-            modifier = Modifier.fillMaxWidth()
+            )
         )
 
-        // Error display
+        // Error display (clean, minimal)
         state.error?.let { error ->
             Card(
                 modifier = Modifier
@@ -135,57 +126,49 @@ fun ChatConversationScreen(
             }
         }
 
-        // Messages area
+        // Clean messages area - no extra padding or decorations
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
-            contentPadding = PaddingValues(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             items(state.messages, key = { it.id }) { message ->
-                EnhancedMessageBubble(
+                CleanMessageBubble(
                     message = message.text,
                     isFromUser = message.isFromUser,
-                    image = message.image,
-                    sources = message.sources,
-                    timestamp = message.timestamp
+                    timestamp = message.timestamp,
+                    onBookmark = {
+                        // TODO: Implement bookmark functionality
+                    }
                 )
             }
 
             if (state.isLoading) {
                 item {
-                    TypingIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        message = "thinking..."
-                    )
+                    TypingIndicator()
                 }
             }
         }
 
-        // Enhanced input with camera support
-        EnhancedChatInput(
-            onSendTextMessage = { text ->
+        // Clean input area
+        CleanChatInput(
+            onSendMessage = { text ->
                 viewModel.onEvent(ChatViewModel.ChatEvent.SendTextMessage(text))
             },
-            onSendMultimodalMessage = { text, image ->
-                viewModel.onEvent(ChatViewModel.ChatEvent.SendMultimodalMessage(text, image))
-            },
-            placeholder = "Ask me anything about Physics, Math, or Medicine...",
-            isEnabled = state.isModelReady && !state.isLoading,
-            modifier = Modifier.fillMaxWidth()
+            placeholder = "Ask me anything about your studies...",
+            isEnabled = state.isModelReady && !state.isLoading
         )
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 fun ChatConversationScreenPreview() {
     KatalisTheme {
-        // Preview with mock data
         Column {
-            Text("Preview - Enhanced AI Chat Screen")
+            Text("Clean Educational Chat Interface")
         }
     }
 }

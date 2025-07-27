@@ -162,43 +162,94 @@ class DeviceCapabilityService @Inject constructor(
         isLowPowerMode: Boolean,
         thermalState: Int
     ): AccelerationType {
-        // ULTRA-CONSERVATIVE: Force CPU-only until GPU detection is fully validated
-        // This ensures app stability for Gemma 3n integration
-
         android.util.Log.d("DeviceCapability", "GPU Detection Results:")
         android.util.Log.d("DeviceCapability", "  hasGPUSupport: $hasGPUSupport")
         android.util.Log.d("DeviceCapability", "  gpuVendor: $gpuVendor")
         android.util.Log.d("DeviceCapability", "  estimatedVRAM: ${formatBytes(estimatedVRAM)}")
         android.util.Log.d("DeviceCapability", "  totalRAM: ${formatBytes(totalRAM)}")
-        android.util.Log.d("DeviceCapability", "  Forcing CPU_ONLY for stability")
+        android.util.Log.d("DeviceCapability", "  isLowPowerMode: $isLowPowerMode")
+        android.util.Log.d("DeviceCapability", "  thermalState: $thermalState")
 
-        return AccelerationType.CPU_ONLY
+        // Enable GPU acceleration with intelligent fallbacks for better performance
 
-        // TODO: Re-enable GPU acceleration after implementing safe OpenGL context handling
-        /*
-        if (!hasGPUSupport || isLowPowerMode) {
+        // Basic prerequisites for GPU acceleration
+        if (!hasGPUSupport) {
+            android.util.Log.d("DeviceCapability", "No GPU support detected - using CPU_ONLY")
             return AccelerationType.CPU_ONLY
         }
-        
+
+        // Respect user power saving preferences
+        if (isLowPowerMode) {
+            android.util.Log.d("DeviceCapability", "Battery saver mode active - using CPU_ONLY")
+            return AccelerationType.CPU_ONLY
+        }
+
+        // Avoid GPU when device is thermally stressed
         if (thermalState >= PowerManager.THERMAL_STATUS_MODERATE) {
-            return AccelerationType.CPU_ONLY  // Avoid GPU when device is already warm
+            android.util.Log.d(
+                "DeviceCapability",
+                "Device thermal state too high ($thermalState) - using CPU_ONLY"
+            )
+            return AccelerationType.CPU_ONLY
         }
-        
-        val minVRAMForGPU = 512L * 1024 * 1024  // 512MB minimum
-        val minRAMForGPU = 4L * 1024 * 1024 * 1024  // 4GB total RAM minimum
-        
-        return when {
-            estimatedVRAM >= minVRAMForGPU && totalRAM >= minRAMForGPU -> {
-                if (gpuVendor.contains("Adreno 7", ignoreCase = true) || 
-                    gpuVendor.contains("Mali-G78", ignoreCase = true)) {
-                    AccelerationType.GPU_PREFERRED
-                } else {
-                    AccelerationType.GPU_FALLBACK_CPU
-                }
+
+        // Minimum hardware requirements for GPU acceleration
+        val minVRAMForGPU = 512L * 1024 * 1024  // 512MB minimum VRAM
+        val minRAMForGPU = 6L * 1024 * 1024 * 1024  // 6GB total RAM minimum for Gemma 3n
+
+        if (totalRAM < minRAMForGPU) {
+            android.util.Log.d(
+                "DeviceCapability",
+                "Insufficient RAM (${formatBytes(totalRAM)}) for GPU acceleration - using CPU_ONLY"
+            )
+            return AccelerationType.CPU_ONLY
+        }
+
+        if (estimatedVRAM < minVRAMForGPU) {
+            android.util.Log.d(
+                "DeviceCapability",
+                "Insufficient VRAM (${formatBytes(estimatedVRAM)}) for GPU acceleration - using CPU_ONLY"
+            )
+            return AccelerationType.CPU_ONLY
+        }
+
+        // GPU vendor-specific acceleration recommendations
+        val acceleration = when {
+            // High-performance GPUs - safe for direct GPU acceleration
+            gpuVendor.contains("Adreno 7", ignoreCase = true) ||
+                    gpuVendor.contains("Mali-G78", ignoreCase = true) ||
+                    gpuVendor.contains("Mali-G710", ignoreCase = true) ||
+                    gpuVendor.contains("Exynos 2400", ignoreCase = true) -> {
+                android.util.Log.d(
+                    "DeviceCapability",
+                    "High-performance GPU detected - using GPU_PREFERRED"
+                )
+                AccelerationType.GPU_PREFERRED
             }
-            else -> AccelerationType.CPU_ONLY
+
+            // Mid-range GPUs - use GPU with CPU fallback for safety
+            gpuVendor.contains("Adreno 6", ignoreCase = true) ||
+                    gpuVendor.contains("Mali-G", ignoreCase = true) ||
+                    totalRAM >= 8L * 1024 * 1024 * 1024 -> {
+                android.util.Log.d(
+                    "DeviceCapability",
+                    "Mid-range GPU detected - using GPU_FALLBACK_CPU"
+                )
+                AccelerationType.GPU_FALLBACK_CPU
+            }
+
+            // Unknown or older GPUs - adaptive approach
+            else -> {
+                android.util.Log.d(
+                    "DeviceCapability",
+                    "Unknown/older GPU detected - using AUTO_ADAPTIVE"
+                )
+                AccelerationType.AUTO_ADAPTIVE
+            }
         }
-        */
+
+        android.util.Log.d("DeviceCapability", "Final recommendation: $acceleration")
+        return acceleration
     }
     
     private fun getAvailableInternalStorage(): Long {
