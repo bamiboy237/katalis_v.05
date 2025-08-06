@@ -17,7 +17,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.katalis.app.presentation.components.chat.CleanChatInput
-import com.katalis.app.presentation.components.chat.SubjectSuggestionChips
 import com.katalis.app.presentation.theme.KatalisTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,13 +37,7 @@ fun ChatWelcomeScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "⚡",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Katalis AI",
+                            text = "Katalis",
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Bold
                             ),
@@ -67,21 +60,10 @@ fun ChatWelcomeScreen(
             )
         },
         bottomBar = {
-            Column {
-                // Subject suggestion chips
-                SubjectSuggestionChips(
-                    suggestions = listOf("Biology", "Chemistry", "Physics", "Mathematics"),
-                    onSuggestionClick = { subject ->
-                        onSendMessage("Tell me about $subject")
-                    },
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                CleanChatInput(
-                    onSendMessage = onSendMessage,
-                    placeholder = "Ask about biology, chemistry, physics..."
-                )
-            }
+            CleanChatInput(
+                onSendMessage = onSendMessage,
+                placeholder = "Ask about biology, chemistry, physics..."
+            )
         },
         modifier = modifier
     ) { paddingValues ->
@@ -115,54 +97,14 @@ fun ChatWelcomeScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Educational AI Illustration
-            Card(
-                modifier = Modifier.size(120.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Text(
-                        text = "🧠\n📚",
-                        style = MaterialTheme.typography.headlineLarge,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Main title
-            Text(
-                text = "Get started with Katalis AI",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Description
             Text(
-                text = "Ask Katalis AI for help with understanding concepts, solving problems, preparing for quizzes, and exploring topics in biology, chemistry, physics, and mathematics.",
+                text = "Ask Katalis for help with understanding concepts, solving problems, preparing for quizzes, and exploring topics in biology, chemistry, physics, and mathematics.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 32.dp)
             )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Learning capabilities
-            StudyCapabilityCards()
 
             Spacer(modifier = Modifier.height(40.dp))
         }
