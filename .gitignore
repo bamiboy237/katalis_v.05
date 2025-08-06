@@ -68,6 +68,8 @@ docs/memory/
 # MCP and other config files with sensitive data
 mcp-analyzer-config.json
 firebender.json
+**/firebender.json
+firebender*.json
 local.properties
 
 # IDE-specific files
